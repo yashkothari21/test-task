@@ -7,10 +7,10 @@ const app = express();
 const csv = require("csv-parser");
 const PORT = process.env.PORT || 3000;
 const client_id = process.env.GOOGLE_CLIENT_ID;
-const client_secret= process.env.GOOGLE_CLIENT_SECRET;
-const redirect_uris= process.env.GOOGLE_REDIRECT_URI;
+const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+const redirect_uris = process.env.GOOGLE_REDIRECT_URI;
 const oauth2Client = new google.auth.OAuth2(
- client_id,
+  client_id,
   client_secret,
   redirect_uris
 );
@@ -41,7 +41,7 @@ async function authorize(req) {
       access_type: "offline",
       scope: ["https://www.googleapis.com/auth/gmail.readonly"],
     });
-    console.log("Authorize this app by visiting this url:", authUrl);
+    // console.log("Authorize this app by visiting this url:", authUrl);
     return authUrl;
   }
 }
@@ -76,7 +76,8 @@ async function ParseData(csvData) {
     }
     console.log("CSV data imported successfully!");
   } catch (error) {
-    console.error("Error processing CSV data:", error);
+    //   console.error("Error processing CSV data:", error);
+    //   throw new Error("Error processing CSV data:")
   } finally {
     await prisma.$disconnect();
   }
@@ -122,11 +123,13 @@ async function searchCsvEmails(searchSubject) {
         }
       }
     }
-    const buffer = Buffer.from(results[0].attachmentData, "base64");
-    await ParseData(buffer.toString());
-    return "Stored in  DB";
+    if (results.length && results[0]?.attachmentData) {
+      const buffer = Buffer.from(results[0].attachmentData, "base64");
+      await ParseData(buffer.toString());
+    }
+    return !results.length ? "No data Found" : "Stored in  DB";
   } catch (error) {
-    console.log("<<<error", error);
+    // console.log("<<<error", error);
   }
 }
 
@@ -165,7 +168,7 @@ app.get("/getData", async (req, res) => {
 });
 app.post("/search-csv", async (req, res) => {
   try {
-        await authorize(req);
+    await authorize(req);
     const emails = await searchCsvEmails(req.body.searchSubject);
     return res.status(200).json(emails);
   } catch (error) {

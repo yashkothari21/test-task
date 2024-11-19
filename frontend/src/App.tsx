@@ -14,7 +14,9 @@ function App() {
   });
   const [emails, setEmails] = useState<any>([]);
   const [error, setError] = useState("");
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const [isLoggedIn, setisLoggedIn] = useState(
+    localStorage.getItem("isLoggedIn") === "true"
+  );
   const [searchSubject, setSearchSubject] = useState("");
   const handleLogin = async () => {
     setLoading({ ...loading, login: true });
@@ -74,7 +76,10 @@ function App() {
         })
         .then((response) => {
           console.log("Token received:", response.data);
-          if (response.data.status) localStorage.setItem("isLoggedIn", "true");
+          if (response.data.status) {
+            localStorage.setItem("isLoggedIn", "true");
+            setisLoggedIn(true);
+          }
           window.location.href = FRONTEND_URL;
         })
         .catch((error) => {
@@ -89,21 +94,24 @@ function App() {
         <h1 className="m-4">Gmail CSV Search</h1>
         <div className="flex  gap-4 justify-center items-center">
           <Button
-            onClick={isLoggedIn ? () => {} : handleLogin}
+            onClick={
+              isLoggedIn
+                ? () => {
+                    localStorage.clear();
+                    setisLoggedIn(false);
+                  }
+                : handleLogin
+            }
             disabled={loading.login}
           >
-            {loading.login
-              ? "Logging in..."
-              : isLoggedIn
-              ? "Logged In"
-              : "Login"}
+            {loading.login ? "Logging in..." : isLoggedIn ? "Log Out" : "Login"}
           </Button>
           <div className="flex justify-around gap-5">
             <Input
               type="text"
               onChange={(e) => setSearchSubject(e.target.value)}
               value={searchSubject}
-              placeholder="Test task mock data"
+              placeholder="Gmail Subject Name"
             />
             <Button
               onClick={handleSearch}
